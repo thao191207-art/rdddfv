@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Không gian phân tích — Analysis Workspace</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/style.css">
+  <!-- Chart.js & Datalabels Plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <div class="logo-badge">KP</div>
+          <div class="logo-text">
+            <h1>Không gian phân tích</h1>
+            <span>Analysis Workspace</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4-Step Workflow Nav -->
+      <nav class="workflow-nav">
+        <button id="nav-step-1" class="step-nav-btn active" onclick="app.goToStep(1)">
+          <div class="step-number">1</div>
+          <div class="step-info">
+            <span class="step-title">Kết nối dữ liệu</span>
+            <span class="step-subtitle">Ngữ cảnh & Nguồn dữ liệu</span>
+          </div>
+        </button>
+
+        <button id="nav-step-2" class="step-nav-btn locked" onclick="app.goToStep(2)">
+          <div class="step-number">2</div>
+          <div class="step-info">
+            <span class="step-title">Làm sạch</span>
+            <span class="step-subtitle">Chuẩn hóa & Gán vai trò</span>
+          </div>
+          <i data-lucide="lock" class="lock-icon" id="lock-step-2"></i>
+        </button>
+
+        <button id="nav-step-3" class="step-nav-btn locked" onclick="app.goToStep(3)">
+          <div class="step-number">3</div>
+          <div class="step-info">
+            <span class="step-title">Phân tích</span>
+            <span class="step-subtitle">Thống kê & Trả lời bài toán</span>
+          </div>
+          <i data-lucide="lock" class="lock-icon" id="lock-step-3"></i>
+        </button>
+
+        <button id="nav-step-4" class="step-nav-btn locked" onclick="app.goToStep(4)">
+          <div class="step-number">4</div>
+          <div class="step-info">
+            <span class="step-title">Báo cáo</span>
+            <span class="step-subtitle">Dashboard & Xuất tệp</span>
+          </div>
+          <i data-lucide="lock" class="lock-icon" id="lock-step-4"></i>
+        </button>
+      </nav>
+
+      <!-- Sidebar Status Widget -->
+      <div class="sidebar-status">
+        <span class="status-label">Trạng thái dữ liệu</span>
+        <div class="status-badge">
+          <div id="status-dot" class="status-dot"></div>
+          <span id="sidebar-data-status" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Chưa có dữ liệu</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Navigation Bar -->
+      <header class="top-bar">
+        <div class="breadcrumb">
+          <h2 id="top-title">Bước 1: Kết nối dữ liệu</h2>
+        </div>
+        <div class="top-actions">
+          <button class="btn btn-secondary" onclick="app.resetSession()">
+            <i data-lucide="rotate-ccw"></i> Làm mới
+          </button>
+        </div>
+      </header>
+
+      <!-- Step Content Container -->
+      <div class="page-body">
+
+        <!-- ======================================================== -->
+        <!-- STEP 1: KẾT NỐI DỮ LIỆU                                  -->
+        <!-- ======================================================== -->
+        <section id="step-1-content" class="step-pane">
+          <!-- Business Context Form -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3 class="panel-title">
+                <i data-lucide="briefcase"></i> Ngữ cảnh bài toán kinh doanh
+              </h3>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div>
+                <div class="form-group">
+                  <label class="form-label">Loại hình doanh nghiệp <span class="req">*</span></label>
+                  <input type="text" id="input-biz-type" class="form-input" placeholder="Ví dụ: Bán lẻ nông sản, B2B SaaS, Logistics..." value="Bán lẻ và phân phối nông sản chế biến">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Thông tin bổ sung (không bắt buộc)</label>
+                  <textarea id="input-biz-info" class="form-textarea" rows="2" placeholder="Ví dụ: Thị trường miền Nam, hoạt động đa kênh từ 2018...">Kinh doanh chuỗi đại lý và kênh bán lẻ trực tiếp 5 nhóm mặt hàng trái cây chế biến chính.</textarea>
+                </div>
+              </div>
+
+              <div>
+                <div class="form-group">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label class="form-label" style="margin-bottom:0;">Vấn đề cần phân tích (Tối đa 8 câu hỏi, mỗi câu 1 dòng) <span class="req">*</span></label>
+                    <span id="question-count-badge" style="font-size: 11px; font-weight: 700; color: #2563EB;">3/8 câu</span>
+                  </div>
+                  <textarea id="input-questions" class="form-textarea" rows="5" placeholder="Nhập từ 1 đến 8 câu hỏi, mỗi câu trên một dòng riêng biệt...&#10;Ví dụ:&#10;1. Doanh thu theo nhóm sản phẩm nào cao nhất?&#10;2. Tỷ suất ROS toàn công ty đạt bao nhiêu?&#10;3. Xu hướng tăng trưởng doanh thu 12 tháng ra sao?">Doanh thu theo nhóm sản phẩm nào cao nhất trong kỳ?
+Tỷ suất lợi nhuận trên doanh thu (ROS) toàn công ty đạt bao nhiêu?
+Xu hướng tăng trưởng của nhóm chủ lực qua các tháng biến động ra sao?</textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Consultation Panel -->
+            <div style="margin-top: 10px; display: flex; gap: 12px; align-items: center;">
+              <button class="btn btn-secondary" onclick="app.consultAI()">
+                <i data-lucide="sparkles" style="color: #2563EB;"></i> Trao đổi yêu cầu với AI
+              </button>
+              <span style="font-size: 12px; color: #64748B;">AI sẽ tóm tắt mục tiêu, chỉ ra thông tin thiếu và đề xuất câu hỏi làm rõ.</span>
+            </div>
+
+            <div id="ai-chat-container" class="ai-chat-box" style="display: none;">
+              <h4 style="font-size: 13px; font-weight: 700; color: #1E3A8A; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="bot"></i> Ý kiến tư vấn từ AI Assistant
+              </h4>
+              <div id="ai-goal-box" class="ai-bubble"></div>
+              <div id="ai-missing-box" class="ai-bubble" style="background: #FFFBEB; border-color: #FDE68A;"></div>
+              <div id="ai-clarify-box" class="ai-bubble" style="background: #F0FDF4; border-color: #BBF7D0;"></div>
+
+              <div style="margin-top: 10px;">
+                <label class="form-label">Phản hồi của bạn để làm rõ yêu cầu:</label>
+                <div style="display: flex; gap: 10px;">
+                  <input type="text" id="input-user-clarify" class="form-input" placeholder="Ví dụ: Ưu tiên phân tích theo tháng, mục tiêu ROS tối thiểu 20%...">
+                  <button class="btn btn-primary" onclick="app.saveUserClarification()">Lưu phản hồi</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Data Ingestion Section -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3 class="panel-title">
+                <i data-lucide="database"></i> Nạp dữ liệu vào không gian phân tích
+              </h3>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+              <!-- File Upload -->
+              <div style="border: 2px dashed #CBD5E1; border-radius: 12px; padding: 24px; text-align: center; background: #F8FAFC;">
+                <i data-lucide="upload-cloud" style="width: 44px; height: 44px; color: #3B82F6; margin-bottom: 8px;"></i>
+                <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 4px;">Tải lên tệp CSV / TSV</h4>
+                <p style="font-size: 12px; color: #64748B; margin-bottom: 14px;">Hỗ trợ UTF-8, UTF-8 BOM, nhận diện dấu phân cách tự động (tối đa 50MB)</p>
+                <input type="file" id="file-upload-input" accept=".csv,.tsv,.txt" style="display: none;" onchange="app.handleFileUpload(event)">
+                <button class="btn btn-primary" onclick="document.getElementById('file-upload-input').click()">
+                  <i data-lucide="file-plus"></i> Chọn tệp từ máy tính
+                </button>
+                <div id="upload-progress-container" style="display: none; margin-top: 14px;">
+                  <div style="background: #E2E8F0; border-radius: 4px; height: 6px; overflow: hidden;">
+                    <div id="upload-progress-bar" style="background: #2563EB; height: 100%; width: 0%;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Google Sheets & Sample Data -->
+              <div>
+                <div style="margin-bottom: 18px;">
+                  <label class="form-label">Kết nối Google Sheets công khai</label>
+                  <div style="display: flex; gap: 8px;">
+                    <input type="url" id="input-sheets-url" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/.../edit#gid=0">
+                    <button class="btn btn-secondary" onclick="app.connectGoogleSheets()">Kết nối</button>
+                  </div>
+                  <span style="font-size: 11px; color: #64748B;">Bảng tính cần mở quyền "Bất kỳ ai có liên kết đều có thể xem".</span>
+                </div>
+
+                <div style="border-top: 1px solid var(--border-color); padding-top: 16px;">
+                  <label class="form-label" style="color: #1E3A8A; font-weight: 700;">Thử dữ liệu mẫu (Sample datasets):</label>
+                  <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" onclick="app.loadSampleData('marketing_sales')">
+                      <i data-lucide="bar-chart-2" style="color: #EA580C;"></i> Doanh thu và marketing (1.366 dòng)
+                    </button>
+                    <button class="btn btn-secondary" onclick="app.loadSampleData('retail_logistics')">
+                      <i data-lucide="truck" style="color: #0D9488;"></i> Bán lẻ đa kênh & Logistics (1.502 dòng)
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Preview & Connect confirmation -->
+          <div id="data-preview-card" class="panel-card" style="display: none;">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title" id="preview-title">Xem trước dữ liệu</h3>
+                <span id="preview-meta-info" style="font-size: 12px; color: #64748B;"></span>
+              </div>
+              <button id="btn-proceed-step-2" class="btn btn-success" onclick="app.completeStep1()">
+                Tiếp tục: Sang bước Làm sạch <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+            <div class="table-container" style="max-height: 380px;">
+              <table id="preview-table" class="data-table">
+                <thead id="preview-thead"></thead>
+                <tbody id="preview-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- STEP 2: LÀM SẠCH VÀ CHUẨN HÓA                            -->
+        <!-- ======================================================== -->
+        <section id="step-2-content" class="step-pane" style="display: none;">
+          <!-- Top action bar for step 2 -->
+          <div class="panel-card" style="background: #F8FAFC; border-color: #CBD5E1;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+              <div>
+                <h3 style="font-size: 15px; font-weight: 700; color: #1E3A8A; margin-bottom: 2px;">
+                  Tự động kiểm tra chất lượng dữ liệu
+                </h3>
+                <p id="clean-summary-desc" style="font-size: 12.5px; color: #475569;">
+                  Đang phát hiện các lỗi định dạng, ô trống, dòng trùng lặp và chữ hoa thường...
+                </p>
+              </div>
+              <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" onclick="app.autoCleanAll()">
+                  <i data-lucide="wand-2" style="color: #2563EB;"></i> Tự động làm sạch nhanh
+                </button>
+                <button class="btn btn-success" onclick="app.completeStep2()">
+                  Hoàn tất làm sạch: Sang Phân tích <i data-lucide="arrow-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quality Issues Interactive Container -->
+          <div class="panel-card">
+            <h3 class="panel-title" style="margin-bottom: 14px;">
+              <i data-lucide="alert-triangle" style="color: #EAB308;"></i> Các vấn đề phát hiện và hành động xử lý
+            </h3>
+            <div id="issues-list-container">
+              <!-- Dynamically rendered issue cards -->
+            </div>
+          </div>
+
+          <!-- Column Role Mapping (Addendum 1) -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">
+                  <i data-lucide="tag"></i> Ánh xạ vai trò cột dữ liệu (Column Role Mapping)
+                </h3>
+                <p style="font-size: 12px; color: #64748B;">
+                  Hệ thống tự động phát hiện vai trò của các cột để vẽ biểu đồ và tính toán KPI. Bạn có thể điều chỉnh thủ công nếu cần.
+                </p>
+              </div>
+            </div>
+            <div id="column-roles-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+              <!-- Dynamically populated role dropdowns -->
+            </div>
+          </div>
+
+          <!-- Audit Log Section -->
+          <div class="panel-card">
+            <h3 class="panel-title" style="margin-bottom: 14px;">
+              <i data-lucide="history"></i> Nhật ký thao tác làm sạch (Audit Log)
+            </h3>
+            <div class="table-container" style="max-height: 240px;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>STT</th>
+                    <th>Thời gian</th>
+                    <th>Thao tác</th>
+                    <th>Cột</th>
+                    <th>Chi tiết xử lý</th>
+                    <th>Số dòng trước</th>
+                    <th>Số dòng sau</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-log-tbody">
+                  <!-- Audit rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- STEP 3: PHÂN TÍCH THỐNG KÊ VÀ BÀI TOÁN KINH DOANH        -->
+        <!-- ======================================================== -->
+        <section id="step-3-content" class="step-pane" style="display: none;">
+          <div class="panel-card" style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <h3 style="font-size: 16px; font-weight: 700; color: #1E3A8A;">Tính toán số liệu & Trả lời bài toán kinh doanh</h3>
+              <p style="font-size: 12.5px; color: #64748B;">Tính toán các chỉ số thống kê, ma trận tương quan, dị biệt (outliers) và ánh xạ câu hỏi kinh doanh.</p>
+            </div>
+            <button class="btn btn-primary" onclick="app.executeAnalysis()">
+              <i data-lucide="play"></i> Chạy phân tích thống kê
+            </button>
+          </div>
+
+          <!-- Business Questions Answers Panel -->
+          <div class="panel-card">
+            <h3 class="panel-title" style="margin-bottom: 14px;">
+              <i data-lucide="help-circle" style="color: #2563EB;"></i> Lời giải cụ thể cho các câu hỏi kinh doanh (Từ Bước 1)
+            </h3>
+            <div id="questions-answers-container" style="display: flex; flex-direction: column; gap: 12px;">
+              <!-- Answers rendered here -->
+            </div>
+          </div>
+
+          <!-- Statistical Summary Table -->
+          <div class="panel-card">
+            <h3 class="panel-title" style="margin-bottom: 14px;">
+              <i data-lucide="table"></i> Thống kê mô tả các biến số định lượng
+            </h3>
+            <div class="table-container">
+              <table id="numeric-stats-table" class="data-table">
+                <thead>
+                  <tr>
+                    <th>Tên cột</th>
+                    <th>Số bản ghi</th>
+                    <th>Tổng cộng (Sum)</th>
+                    <th>Trung bình (Mean)</th>
+                    <th>Trung vị (Median)</th>
+                    <th>Nhỏ nhất (Min)</th>
+                    <th>Lớn nhất (Max)</th>
+                    <th>Độ lệch chuẩn (Std)</th>
+                  </tr>
+                </thead>
+                <tbody id="numeric-stats-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Anomalies and Outliers -->
+          <div class="panel-card">
+            <h3 class="panel-title" style="margin-bottom: 14px;">
+              <i data-lucide="zap" style="color: #DC2626;"></i> Phát hiện giao dịch bất thường (3 Sigma & IQR Outliers)
+            </h3>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Mã đơn / Dòng</th>
+                    <th>Cột kiểm tra</th>
+                    <th>Giá trị ghi nhận</th>
+                    <th>Mức trung bình</th>
+                    <th>Điểm số Z-Score</th>
+                    <th>Phân loại</th>
+                  </tr>
+                </thead>
+                <tbody id="anomalies-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Button to proceed to Step 4 -->
+          <div style="text-align: right; margin-bottom: 24px;">
+            <button class="btn btn-success" onclick="app.goToStep(4)">
+              Tiếp tục: Xem Báo cáo điều hành & Xuất file <i data-lucide="arrow-right"></i>
+            </button>
+          </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- STEP 4: BÁO CÁO ĐIỀU HÀNH & XUẤT TỆP                     -->
+        <!-- ======================================================== -->
+        <section id="step-4-content" class="step-pane" style="display: none;">
+          <!-- Top Horizontal Export Actions Bar -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+              <h2 style="font-size: 20px; font-weight: 800; color: #1E3A8A;">Báo cáo phân tích điều hành</h2>
+              <p style="font-size: 13px; color: #64748B;">Bố cục bảng điều khiển chuẩn hóa đối chiếu với số liệu đã được kiểm chứng độc lập.</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-secondary" onclick="app.exportFile('csv')">
+                <i data-lucide="file-spreadsheet"></i> Xuất CSV sạch
+              </button>
+              <button class="btn btn-secondary" onclick="app.exportFile('excel')">
+                <i data-lucide="file-text" style="color: #059669;"></i> Xuất Excel (.xlsx có biểu đồ)
+              </button>
+              <button class="btn btn-primary" onclick="app.exportFile('pdf')">
+                <i data-lucide="printer"></i> Xuất Báo cáo PDF
+              </button>
+            </div>
+          </div>
+
+          <!-- Horizontal Summary Strip (Thanh tổng số ngang) -->
+          <div id="summary-strip-container" class="summary-strip-container">
+            <!-- Dynamically populated KPI cards -->
+          </div>
+
+          <!-- Reference Executive Dashboard Box -->
+          <div class="ref-dashboard-box">
+            <!-- ROW 1: SELECTOR AND KPIS -->
+            <div class="selector-header">
+              <div class="selector-title">CHỌN THÁNG BC</div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <select id="select-month" class="custom-select" onchange="app.handleMonthChange(event)">
+                  <!-- Options e.g. T10, T09... -->
+                </select>
+                <span id="selected-year-label" class="selector-sub">Năm 2019</span>
+              </div>
+            </div>
+
+            <!-- Dashboard Row 1 Grid -->
+            <div class="dash-row-1">
+              <!-- Left Stacked KPI Column -->
+              <div class="stacked-kpis">
+                <div class="kpi-card-box">
+                  <span class="kpi-label">TỔNG DOANH THU</span>
+                  <span id="kpi-total-revenue" class="kpi-value">20.717.175.575</span>
+                </div>
+                <div class="kpi-card-box">
+                  <span class="kpi-label">DOANH THU THÁNG HIỆN TẠI</span>
+                  <span id="kpi-month-revenue" class="kpi-value">1.666.023.008</span>
+                </div>
+                <div class="kpi-card-box">
+                  <span class="kpi-label">TỔNG ĐƠN HÀNG</span>
+                  <span id="kpi-total-orders" class="kpi-value">1.366</span>
+                </div>
+                <div class="kpi-card-box">
+                  <span class="kpi-label">ĐƠN HÀNG THÁNG HIỆN TẠI</span>
+                  <span id="kpi-month-orders" class="kpi-value">107</span>
+                </div>
+              </div>
+
+              <!-- Chart 1: Doanh thu theo nhóm SP -->
+              <div class="chart-panel-bordered">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <h4 class="chart-panel-title" style="margin-bottom:0;">DOANH THU THEO NHÓM SP</h4>
+                  <select class="form-select" style="width: auto; padding: 2px 6px; font-size: 11px;" onchange="app.switchChartType('chart1', this.value)">
+                    <option value="bar">Cột (Column)</option>
+                    <option value="horizontalBar">Thanh ngang (Bar)</option>
+                    <option value="pie">Tròn (Pie)</option>
+                  </select>
+                </div>
+                <div class="chart-canvas-wrapper">
+                  <canvas id="canvas-chart-1"></canvas>
+                </div>
+                <div id="analysis-chart-1" class="chart-analysis-text"></div>
+              </div>
+
+              <!-- Chart 2: Lợi nhuận HĐKD theo nhóm SP -->
+              <div class="chart-panel-bordered">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <h4 class="chart-panel-title" style="margin-bottom:0;">LỢI NHUẬN HĐKD THEO NHÓM SP</h4>
+                  <select class="form-select" style="width: auto; padding: 2px 6px; font-size: 11px;" onchange="app.switchChartType('chart2', this.value)">
+                    <option value="bar">Cột (Column)</option>
+                    <option value="horizontalBar">Thanh ngang (Bar)</option>
+                    <option value="pie">Tròn (Pie)</option>
+                  </select>
+                </div>
+                <div class="chart-canvas-wrapper">
+                  <canvas id="canvas-chart-2"></canvas>
+                </div>
+                <div id="analysis-chart-2" class="chart-analysis-text"></div>
+              </div>
+
+              <!-- Right Column: Growth Rate & ROS -->
+              <div class="row1-right-col">
+                <div class="growth-kpi-box">
+                  <div class="label">TĂNG TRƯỞNG DOANH THU</div>
+                  <div id="kpi-mom-growth" class="val" style="color: #0F172A;">-3%</div>
+                </div>
+
+                <div class="chart-panel-bordered" style="flex-grow: 1;">
+                  <h4 class="chart-panel-title">ROS TOÀN CÔNG TY</h4>
+                  <div class="chart-canvas-wrapper" style="min-height: 140px;">
+                    <canvas id="canvas-chart-3"></canvas>
+                  </div>
+                  <div id="analysis-chart-3" class="chart-analysis-text" style="font-size: 11.5px; padding: 6px 10px;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ROW 2: GROUP SELECTOR AND 12-MONTH CHARTS -->
+            <div class="selector-header" style="margin-top: 10px;">
+              <div class="selector-title">CHỌN NHÓM SP</div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <select id="select-group" class="custom-select" onchange="app.handleGroupChange(event)">
+                  <!-- Options e.g. Nhóm chuối, Nhóm khoai... -->
+                </select>
+              </div>
+            </div>
+
+            <!-- Dashboard Row 2 Grid -->
+            <div class="dash-row-2">
+              <!-- Chart 4: Doanh thu của nhóm hàng -->
+              <div class="chart-panel-bordered">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <h4 class="chart-panel-title" style="margin-bottom:0;">DOANH THU CỦA NHÓM HÀNG</h4>
+                  <select class="form-select" style="width: auto; padding: 2px 6px; font-size: 11px;" onchange="app.switchChartType('chart4', this.value)">
+                    <option value="bar">Cột (Column)</option>
+                    <option value="line">Đường (Line)</option>
+                    <option value="area">Vùng (Area)</option>
+                  </select>
+                </div>
+                <div class="chart-canvas-wrapper">
+                  <canvas id="canvas-chart-4"></canvas>
+                </div>
+                <div id="analysis-chart-4" class="chart-analysis-text"></div>
+              </div>
+
+              <!-- Chart 5: Tăng trưởng doanh thu từng nhóm hàng -->
+              <div class="chart-panel-bordered">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <h4 class="chart-panel-title" style="margin-bottom:0;">TĂNG TRƯỞNG DOANH THU TỪNG NHÓM HÀNG</h4>
+                  <select class="form-select" style="width: auto; padding: 2px 6px; font-size: 11px;" onchange="app.switchChartType('chart5', this.value)">
+                    <option value="line">Đường (Line)</option>
+                    <option value="bar">Cột (Column)</option>
+                    <option value="area">Vùng (Area)</option>
+                  </select>
+                </div>
+                <div class="chart-canvas-wrapper">
+                  <canvas id="canvas-chart-5"></canvas>
+                </div>
+                <div id="chart-5-footnote" style="font-size: 11px; color: #64748B; font-style: italic; margin-top: 4px;"></div>
+                <div id="analysis-chart-5" class="chart-analysis-text"></div>
+              </div>
+
+              <!-- Chart 6: ROS của nhóm hàng -->
+              <div class="chart-panel-bordered">
+                <h4 class="chart-panel-title">ROS CỦA NHÓM HÀNG</h4>
+                <div class="chart-canvas-wrapper">
+                  <canvas id="canvas-chart-6"></canvas>
+                </div>
+                <div id="analysis-chart-6" class="chart-analysis-text"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Findings Table -->
+          <div class="panel-card">
+            <h3 class="panel-title" style="margin-bottom: 14px;">
+              <i data-lucide="award" style="color: #2563EB;"></i> Bảng tổng hợp các phát hiện trọng yếu & Khuyến nghị hành động
+            </h3>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Phát hiện</th>
+                    <th>Chỉ số đo lường</th>
+                    <th>Giá trị ghi nhận</th>
+                    <th>Đối chiếu / So sánh</th>
+                    <th>Hành động khuyến nghị</th>
+                  </tr>
+                </thead>
+                <tbody id="top-findings-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
